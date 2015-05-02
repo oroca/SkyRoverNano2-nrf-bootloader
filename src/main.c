@@ -48,7 +48,8 @@
 #include "crtp.h"
 #include "bootloader.h"
 
-#define BOOTLOADER_ADDRESS 0x0003A000
+//#define BOOTLOADER_ADDRESS 0x0003A000
+#define BOOTLOADER_ADDRESS 0x0001BC00
 #define FW_ADDRESS 0x00016000
 
 #define APP_TIMER_PRESCALER                  0                                          /**< Value of the RTC1 PRESCALER register. */
@@ -84,16 +85,34 @@ int main() __attribute__ ((noreturn));
 int main()
 {
   static char address[5];
+  volatile int i;
 
   sd_mbr_command(&startSdCmd);
   sd_softdevice_vector_table_base_set(BOOTLOADER_ADDRESS);
 
+  nrf_gpio_cfg_output(LED_PIN);
+
+
   // If the master boot switch has detected short or no click: boot the firmware
   if (((NRF_POWER->GPREGRET&0x86U) != 0x82U) &&
       ((NRF_POWER->GPREGRET&0x40U) != 0x40U) &&
-      (*(uint32_t *)FW_ADDRESS != 0xFFFFFFFFU) ) {
+      (*(uint32_t *)FW_ADDRESS != 0xFFFFFFFFU) )
+  {
+	  /*
+	  while(1)
+	  {
+		  nrf_gpio_pin_set(LED_PIN);
+		  for(i=0; i<100000; i++);
+		  nrf_gpio_pin_clear(LED_PIN);
+		  for(i=0; i<100000; i++);
+	  }
+	  */
+
     start_firmware();
   }
+
+
+
 
   if (NRF_POWER->GPREGRET&0x40U) {
     address[4] = 0xb1;
